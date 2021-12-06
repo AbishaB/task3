@@ -1,0 +1,21 @@
+# This build can be used deploy all modules sequentially as given below in MODULE_SEQUENCE 
+# Usage : In this directory, run the following command to build
+# $ gcloud builds submit . --config=cloudbuild-master.yaml
+steps:
+- id: 'module_builder'
+  name: 'gcr.io/cloud-builders/gcloud'
+  entrypoint: "bash"
+  args:
+    - '-c'
+    - |
+         MODULE_SEQUENCE=("deployments/multi_vpc",
+                          "deployments/basic_vpc_peering",
+                          "deployments/multiple_service_accounts"
+                         )
+                         
+         for i in "${MODULE_SEQUENCE[@]}"
+         do
+           gcloud builds submit . --config=deployments/cloudbuild-module.yaml --substitutions=_MODULE_DIR_PATH=$i,_TERRAFORM_APPLY="Y",_BUCKET="alert-vortex-330810_cloudbuild"
+         done
+options:
+  logging: CLOUD_LOGGING_ONLY
